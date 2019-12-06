@@ -28,13 +28,22 @@ void execute_program(std::vector<int>& code) {
 
 int main() {
   std::string num_as_str;
-  std::vector<int> vec;
+  std::vector<int> vec_org;
   while(std::getline(std::cin, num_as_str, ',')) {
-    vec.push_back(std::stoi(num_as_str));
+    vec_org.push_back(std::stoi(num_as_str));
   }
-  execute_program(vec);
-  for(auto el : vec) {
-    std::cout << el << ",";
+  std::vector<int> vec(vec_org);
+  for(int noun = 0; noun <= 99; noun++) {
+    for(int verb = 0; verb <= 99; verb++) {
+      vec = vec_org;
+      vec[1] = noun;
+      vec[2] = verb;
+      execute_program(vec);
+      if(vec[0] == 19690720) {
+        std::cout << "noun: " << noun << std::endl;
+        std::cout << "verb: " << verb << std::endl;
+        return 1;
+      }
+    }
   }
-  std::cout << std::endl;
 }
