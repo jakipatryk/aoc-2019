@@ -82,17 +82,17 @@ void handle_state_8(std::vector<int>& code, int start, int m1, int m2, int m3) {
   }
 }
 
-int execute_program(std::vector<int>& code, int phase, int input = 0) {
-  int i = 0;
+std::pair<int, int> execute_program(std::vector<int>& code, int phase, int input, int start = 0) {
+  int i = start;
   int res;
-  bool phase_state = true;
+  bool phase_state = phase != -1;
   while(i < code.size()) {
     auto opt_and_modes = extract_modes_and_instruction(code[i]);
     auto opt = opt_and_modes.second;
     auto modes = opt_and_modes.first;
     switch (opt) {
       case 99:
-        return res;
+        return std::make_pair(res, -1);
       case 1:
         handle_state_1(code, i, std::get<0>(modes), std::get<1>(modes));
         i+=4;
@@ -113,7 +113,7 @@ int execute_program(std::vector<int>& code, int phase, int input = 0) {
       case 4:
         res = handle_state_4(code, i, std::get<0>(modes));
         i+=2;
-        break;
+        return std::make_pair(res, i);
       case 5:
         i = handle_state_5(code, i, std::get<0>(modes), std::get<1>(modes));
         break;
@@ -130,7 +130,7 @@ int execute_program(std::vector<int>& code, int phase, int input = 0) {
         break;
     }
   }
-  return res;
+  return std::make_pair(0, -1);
 }
 
 int main() {
@@ -139,15 +139,25 @@ int main() {
   while(std::getline(std::cin, num_as_str, ',')) {
     code.push_back(std::stoi(num_as_str));
   }
-  std::vector<int> phases = {0,1,2,3,4};
-  std::vector<int> code_cpy(code);
+  std::vector<int> phases = {5,6,7,8,9};
+  std::vector<std::vector<int>> amplifiers = {code, code, code ,code, code};
   int max = 0;
   do {
     int input = 0;
-    for(auto phase : phases) {
-      code_cpy = code;
-      int res = execute_program(code_cpy, phase, input);
-      input = res;
+    for(int i = 0; i < 5; i++) {
+      amplifiers[i] = code;
+    }
+    std::vector<int> current_positions = {0,0,0,0,0};
+    bool first = true;
+    bool should_leave = false;
+    while(!should_leave) {
+      for(int i = 0; i < 5; i++) {
+        auto pair = execute_program(amplifiers[i], first ? phases[i] : -1, input, current_positions[i]);
+        current_positions[i] = pair.second;
+        input = pair.first;
+        if(pair.second == -1) should_leave = true;
+      }
+      first = false;
     }
     if(input > max) max = input;
   } while(std::next_permutation(phases.begin(), phases.end()));
